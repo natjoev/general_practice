@@ -1,0 +1,13 @@
+## practice query, best hacker news story according to score. 
+SELECT  
+  url,
+  title,
+  hnews.by,
+  score
+FROM 
+  `bigquery-public-data.hacker_news.full` AS hnews
+ORDER BY
+  score DESC
+LIMIT 10 
+# data reveals that the top story by score is Stephen Hawking's death. 
+# The top two is about Apple opposing US government stuff 
