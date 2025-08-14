@@ -11,3 +11,16 @@ ORDER BY
 LIMIT 10 
 # data reveals that the top story by score is Stephen Hawking's death. 
 # The top two is about Apple opposing US government stuff 
+
+## practice query, top author by average score 
+SELECT  
+  hnews.by,
+  AVG(score) AS average_score
+FROM 
+  `bigquery-public-data.hacker_news.full` AS hnews
+GROUP BY
+  hnews.by
+ORDER BY
+  average_score DESC
+LIMIT 10 
+# data reveals that phantop is the highest average scorer
