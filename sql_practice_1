@@ -12,7 +12,8 @@ LIMIT 10
 # data reveals that the top story by score is Stephen Hawking's death. 
 # The top two is about Apple opposing US government stuff 
 
-## practice query, top author by average score 
+
+## top author by average score 
 SELECT  
   hnews.by,
   AVG(score) AS average_score
@@ -24,3 +25,84 @@ ORDER BY
   average_score DESC
 LIMIT 10 
 # data reveals that phantop is the highest average scorer
+
+
+## adding a count(*) to identify potential outliers
+SELECT  
+  COUNT(*) AS stories_by_author,
+  AVG(score) AS average_score,
+  hnews.by
+FROM 
+  `bigquery-public-data.hacker_news.full` AS hnews
+GROUP BY
+  hnews.by
+ORDER BY
+  average_score DESC 
+
+## Setting this as a subquery, to find no. of authors
+
+## adding a count(*) to identify potential outliers
+SELECT
+COUNT(*) AS no_of_authors
+FROM
+  (SELECT  
+    COUNT(*) AS stories_by_author,
+    AVG(score) AS average_score,
+    hnews.by
+  FROM 
+    `bigquery-public-data.hacker_news.full` AS hnews
+  GROUP BY
+    hnews.by
+  ORDER BY
+    average_score DESC
+  ) AS author_performance
+
+## now what if we are only concerned with authors with consistency?
+
+# first, we get the average no. of stories per author
+SELECT
+  COUNT(*) AS no_of_authors,
+  AVG(author_performance.stories_by_author) AS average_stories_per_author
+FROM
+  (SELECT  
+    COUNT(*) AS stories_by_author,
+    AVG(score) AS average_score,
+    hnews.by
+  FROM 
+    `bigquery-public-data.hacker_news.full` AS hnews
+  GROUP BY
+    hnews.by
+  ORDER BY
+    average_score DESC
+  ) AS author_performance
+
+# then we want to add a filter condition to an earlier query
+SELECT  
+  COUNT(*) AS stories_by_author,
+  AVG(score) AS average_score,
+  hnews.by
+FROM 
+  `bigquery-public-data.hacker_news.full` AS hnews
+GROUP BY
+  hnews.by
+HAVING
+  stories_by_author >= 43
+ORDER BY
+  average_score DESC
+# apparently, there are still so many stories per author, but at least we get closer to our objective. 
+# we also note that janice1999 average score is higher by a lot, compared to the others. 
+
+## we then want to explore janice1999 data.
+SELECT  
+  url,
+  title,
+  score
+FROM 
+  `bigquery-public-data.hacker_news.full` AS hnews
+WHERE 
+  hnews.by = 'janice1999'
+ORDER BY
+  score DESC
+# upon running the above query, we discover that there are a lot of null values which skew the results. 
+
+### LESSON LEARNED: CLEAN DATA FIRST.
