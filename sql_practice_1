@@ -106,3 +106,96 @@ ORDER BY
 # upon running the above query, we discover that there are a lot of null values which skew the results. 
 
 ### LESSON LEARNED: CLEAN DATA FIRST.
+
+
+### now, with the clean data (nulls omitted), we get the average number of stories per author to get answers to address consistent performance.
+
+SELECT
+  AVG(real_count_author) AS real_average_count
+FROM 
+(SELECT
+  hnews.by,
+  COUNT(*) AS real_count_author,
+  AVG(score) AS average_score
+FROM
+  `bigquery-public-data.hacker_news.full` AS hnews
+WHERE
+  title IS NOT NULL
+  AND url IS NOT NULL
+  AND text IS NOT NULL
+GROUP BY
+  hnews.by
+ORDER BY
+  average_score DESC
+# the where clause filters out the null values, so we must get a new average no.
+) AS inner_query
+
+# the results show that that average is just 2. so no need to check for consistency. 
+# average score now might not matter, but for completeness sake, we will explore the top average authors. 
+
+SELECT
+  hnews.by,
+  COUNT(*) AS real_count_author,
+  AVG(score) AS average_score
+FROM
+  `bigquery-public-data.hacker_news.full` AS hnews
+WHERE
+  title IS NOT NULL
+  AND url IS NOT NULL
+  AND text IS NOT NULL
+GROUP BY
+  hnews.by
+ORDER BY
+  average_score DESC
+LIMIT 10 
+
+# Interestingly, this gives us an entirely different result when you exclude the nulls. 
+# But what if we tweak the filter to OR instead of AND (long story short, its as if there were no filter)
+# upon exploring phantop's data, it occured to me that it was the column 'type' that was significant
+
+## therefore, a more fine tuned query looks like this 
+SELECT
+  hnews.by,
+  COUNT(*) AS real_count_author,
+  AVG(score) AS average_score
+FROM
+  `bigquery-public-data.hacker_news.full` AS hnews
+WHERE
+  title IS NOT NULL
+  OR url IS NOT NULL
+  AND type = 'story'
+GROUP BY
+  hnews.by
+ORDER BY
+  average_score DESC
+LIMIT 10
+
+## now we can view the relevant stories using the ff
+
+SELECT
+*
+FROM
+  `bigquery-public-data.hacker_news.full` AS hnews
+WHERE
+  title IS NOT NULL
+  OR url IS NOT NULL
+  AND type = 'story'
+ORDER BY
+  score DESC
+LIMIT 10 
+
+### ALL THIS TO ARRIVE AT ONE SIMPLE QUERY!
+
+SELECT
+*
+FROM
+  `bigquery-public-data.hacker_news.full` AS hnews
+WHERE
+  title IS NOT NULL
+  OR url IS NOT NULL
+  AND type = 'story'
+ORDER BY
+  score DESC
+LIMIT 10 
+
+# we get the best stories and now we can analyze. 
